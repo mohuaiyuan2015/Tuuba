@@ -37,11 +37,11 @@ public class Constants {
     public static final String KIND_FUNCTION="Function";
     public static final String KIND_SPEECH="Speech";
 
+
     public static final String FUNCTION_CLOSE_CHAY="close_chat";
     public static final String FUNCTION_OPEN_CHAY="open_chat";
     public static final String FUNCTION_FALL_ASLEEP="fall_asleep";
     public static final String FUNCTION_AWAKEN="awaken";
-
 
 
 }
