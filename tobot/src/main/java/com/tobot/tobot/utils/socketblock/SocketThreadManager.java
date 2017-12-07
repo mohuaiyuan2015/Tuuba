@@ -43,7 +43,7 @@ public class SocketThreadManager {
 //        mHeartThread = SocketHeartThread.instance();
 //        mInputThread = new SocketInputThread();
 //        mOutThread = new SocketOutputThread();
-        mConnectTest = new SocketConnectCoherence();
+        mConnectTest = SocketConnectCoherence.instance();
     }
 
     // 启动线程

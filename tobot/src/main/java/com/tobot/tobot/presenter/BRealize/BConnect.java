@@ -254,7 +254,8 @@ public class BConnect implements IConnect{
         }
     }
 
-    protected void onAgain() {
+    @Override
+    public void onAgain() {
         if (!isBing && isSucceed){
             bindRobot();
         }

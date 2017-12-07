@@ -224,7 +224,7 @@ public class SocketInputThread extends Thread {
                     demandModel.setCategoryId(Integer.parseInt(Joint.getCommaAmong(message, 1)));
                     demandModel.setTrack_title(Joint.getCommaAmong(message, 2));
                     demandModel.setPlayUrl32(Joint.getPeelVerify(message));
-                    Demand.instance(MainActivity.mContext).setResource(demandModel);
+//                    Demand.instance(MainActivity.mContext).setResource(demandModel);
                     break;
                 case 5:
                     break;

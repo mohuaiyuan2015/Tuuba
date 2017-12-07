@@ -17,6 +17,7 @@ import com.tobot.tobot.presenter.ICommon.ISceneV;
 import com.tobot.tobot.utils.AudioUtils;
 import com.tobot.tobot.utils.CommonRequestManager;
 import com.tobot.tobot.utils.TobotUtils;
+import com.turing123.robotframe.function.tts.ITTSCallback;
 import com.turing123.robotframe.function.tts.TTS;
 import com.turing123.robotframe.multimodal.Behavior;
 import com.turing123.robotframe.scenario.IScenario;
@@ -346,13 +347,17 @@ public class SongScenario implements IScenario {
         }
     }
 
+
     @Override
     public boolean onTransmitData(Behavior behavior) {
         if (behavior.results != null) {
             Log.i("Javen","进入唱歌场景.......");
             Log.d(TAG, "进入唱歌场景....... ");
 
-            if (getMediaPlayer()!=null && getMediaPlayer().isPlaying()){
+
+
+
+           /* if (getMediaPlayer()!=null && getMediaPlayer().isPlaying()){
                 Log.d(TAG, "正在播放音乐: ");
                 return false;
             }else {
@@ -387,7 +392,7 @@ public class SongScenario implements IScenario {
             Log.d(TAG, "songName: "+songName);
 
             //mohuaiyuan 先用图灵的资源 20170922
-            executeSong();
+            executeSong();*/
 
 //            try {
 //                //无歌名，无歌手名 则播放任意的一首歌

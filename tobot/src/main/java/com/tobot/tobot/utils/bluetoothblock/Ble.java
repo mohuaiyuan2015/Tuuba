@@ -261,26 +261,24 @@ public class Ble {
 
                     int sleepTime=0;
 
-                    String[] temp=msg.split(Constants.SEPARATOR_BETWEEN_SPEECH_AND_ACTION);
-                    for (int i=0;i<temp.length;i++){
-                        if (i==0){
-                            speak(temp[i]);
-                        }else {
-                            String tempMsg=temp[i];
-                            if (tempMsg.contains(":")){
-                                String[] containsTimes=tempMsg.split(":");
-                                Log.d(TAG, "sleepTime: "+sleepTime);
-                                try {
-                                    Thread.sleep(sleepTime);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                                doAction(Integer.valueOf(containsTimes[0]));
-                                sleepTime=Integer.valueOf(containsTimes[1]);
-                            }else {
-                                doAction(Integer.valueOf(tempMsg));
-                            }
+                    String[] bodyString=msg.split(Constants.SEPARATOR_BETWEEN_SPEECH_AND_ACTION);
+                    speak(bodyString[0]);
 
+                    String[]actionArrary=bodyString[1].split(Constants.SEPARATOR_BETWEEN_ACTION_AND_ACTION);
+                    for (int i=0;i<actionArrary.length;i++){
+                        String tempMsg=actionArrary[i];
+                        if (tempMsg.contains(":")){
+                            String[] containsTimes=tempMsg.split(":");
+                            Log.d(TAG, "sleepTime: "+sleepTime);
+                            try {
+                                Thread.sleep(sleepTime);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            doAction(Integer.valueOf(containsTimes[0]));
+                            sleepTime=Integer.valueOf(containsTimes[1]);
+                        }else {
+                            doAction(Integer.valueOf(tempMsg));
                         }
                     }
 
@@ -291,68 +289,7 @@ public class Ble {
             speak(msg);
         }
 
-//        String[] temp=msg.split(Constants.SEPARATOR_BETWEEN_SPEECH_AND_ACTION);
-//        if (temp!=null){
-//            Log.d(TAG, "length:"+temp.length);
-//        }
-//        if (temp!=null){
-//
-//            switch (temp.length){
-//                case 0:
-//
-//                    break;
-//                case 1:
-//                    speak(temp[0]);
-//                    break;
-//                case 2:
-//                    speak(temp[0]);
-//                    doAction(Integer.valueOf(temp[1]));
-//                    break;
-//                case 3:
-//                    speak(temp[0]);
-//                    doAction(Integer.valueOf(temp[1]));
-//                    doAction(Integer.valueOf(temp[2]));
-//                    break;
-//                case 4:
-//                    speak(temp[0]);
-//                    doAction(Integer.valueOf(temp[1]));
-//                    doAction(Integer.valueOf(temp[2]));
-//                    doAction(Integer.valueOf(temp[3]));
-//                    break;
-//                case 5:
-////                    if (isContains){
-////                        speak(temp[0]);
-////                        doAction(Integer.valueOf(temp[1]));
-////                        doAction(Integer.valueOf(temp[2]));
-////                        doAction(Integer.valueOf(temp[3]));
-////
-////                    }else {
-////
-//                        speak(temp[0]);
-//                        doAction(Integer.valueOf(temp[1]));
-//                        doAction(Integer.valueOf(temp[2]));
-//                        doAction(Integer.valueOf(temp[3]));
-//                        doAction(Integer.valueOf(temp[4]));
-////                    }
-//
-//                    break;
-//
-//                case 6:
-//                    speak(temp[0]);
-//                    doAction(Integer.valueOf(temp[1]));
-//                    doAction(Integer.valueOf(temp[2]));
-//                    doAction(Integer.valueOf(temp[3]));
-//                    doAction(Integer.valueOf(temp[4]));
-//                    doAction(Integer.valueOf(temp[5]));
-//
-//                    break;
-//
-//
-//                default:
-//                    speak(temp[0]);
-//                    break;
-//            }
-//        }
+
     }
 
     private void speak(String string){

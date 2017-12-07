@@ -16,6 +16,7 @@ public class Demand {
     private static final String TAG = "Javen_MusicDemand";
     private static Demand demand;
     private static Context context;
+    private static SocketConnectCoherence mCoherence;
 
     public Demand(Context context){
         this.context = context;
@@ -24,41 +25,59 @@ public class Demand {
     public static synchronized Demand instance(Context context) {
         if (demand == null) {
             demand = new Demand(context);
-            setResource();
         }
         return demand;
     }
 
-    public static void setResource(){
-        SocketConnectCoherence.setDemandListener(new SocketConnectCoherence.DemandListener() {
-            @Override
-            public void setDemandResource(DemandModel demand) {
-                //功能实现
-                DemandFactory demandFactory = DemandFactory.getInstance(context);
-                try {
-                    if (TobotUtils.isNotEmpty(MainActivity.mRobotFrameManager)){
-                        MainActivity.mRobotFrameManager.toLostScenario();
-                    }
-                    demandFactory.demands(demand);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+    public void Demand(SocketConnectCoherence mCoherence){
+        this.mCoherence = mCoherence;
+        setResource();
     }
 
-    public void setResource(DemandModel demandModel){
+    public static void setResource(){
+        if (mCoherence != null) {
+            mCoherence.setDemandListener(new SocketConnectCoherence.DemandListener() {
+                @Override
+                public void setDemandResource(DemandModel demand) {
+                    //功能实现
+                    DemandFactory demandFactory = DemandFactory.getInstance(context);
+                    try {
+                        if (TobotUtils.isNotEmpty(MainActivity.mRobotFrameManager)) {
+                            MainActivity.mRobotFrameManager.toLostScenario();
+                        }
+                        demandFactory.demands(demand);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }
+    }
+
+//    public void setResource(DemandModel demandModel){
+//        DemandFactory demandFactory = DemandFactory.getInstance(context);
+//        try {
+//            if (TobotUtils.isNotEmpty(MainActivity.mRobotFrameManager)){
+//                MainActivity.mRobotFrameManager.toLostScenario();
+//            }
+//            demandFactory.demands(demandModel);
+//            Log.i("Javen","点播:"+demandModel.toString());
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
+
+    public void stopDemand(){
         DemandFactory demandFactory = DemandFactory.getInstance(context);
         try {
             if (TobotUtils.isNotEmpty(MainActivity.mRobotFrameManager)){
                 MainActivity.mRobotFrameManager.toLostScenario();
             }
-            demandFactory.demands(demandModel);
-            Log.i("Javen","点播:"+demandModel.toString());
+            demandFactory.stopPlayMusic();
+            Log.i("Javen","点播停止:");
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
 

@@ -1,5 +1,6 @@
 package com.tobot.tobot.utils.socketblock;
 
+import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -40,11 +41,20 @@ public class SocketConnectCoherence {
     private DemandModel model = new DemandModel();
     private Timer desenoTimer = new Timer(true);//休眠时间
     private boolean isRegister;
+    private Demand mDemand;
+    private static SocketConnectCoherence mCoherence;
 
-    public SocketConnectCoherence(){
+    private SocketConnectCoherence(){
         new InitSocketThread().start();
     }
 
+    public static synchronized SocketConnectCoherence instance() {
+        if (mCoherence == null) {
+            mCoherence = new SocketConnectCoherence();
+            Demand.instance(MainActivity.mContext).Demand(mCoherence);
+        }
+        return mCoherence;
+    }
 
     // For heart Beat
     private Handler mHandler = new Handler();
@@ -232,8 +242,8 @@ public class SocketConnectCoherence {
                     model.setCategoryId(Integer.parseInt(Joint.getCommaAmong(message,1)));
                     model.setTrack_title(Joint.getCommaAmong(message,2));
                     model.setPlayUrl32(Joint.getPeelVerify(message));
-                    Demand.instance(MainActivity.mContext).setResource(model);
-//                    mdemandListener.setDemandResource(model);
+//                    Demand.instance(MainActivity.mContext).setResource(model);
+                    mdemandListener.setDemandResource(model);
                     break;
                 case 5:
                     break;
@@ -243,8 +253,8 @@ public class SocketConnectCoherence {
                     model.setCategoryId(88);
                     model.setPlayUrl32(Joint.getPeelVerify(message));
                     Log.i(TAG,"点播的舞蹈编号:"+model.getPlayUrl32()+"舞蹈指令:"+model.getCategoryId());
-                    Demand.instance(MainActivity.mContext).setResource(model);
-//                    mdemandListener.setDemandResource(model);
+//                    Demand.instance(MainActivity.mContext).setResource(model);
+                    mdemandListener.setDemandResource(model);
                     break;
             }
         }

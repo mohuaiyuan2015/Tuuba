@@ -11,4 +11,5 @@ public interface IConnect {
     void shuntVoice();
     void shut();
     void isLoad(boolean load);
+    void onAgain();
 }

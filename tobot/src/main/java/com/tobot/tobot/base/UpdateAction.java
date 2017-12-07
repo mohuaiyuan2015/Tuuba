@@ -49,12 +49,12 @@ public class UpdateAction {
                 .execute(new StringCallback() {
                     @Override
                     public void onError(Call call, Exception e, int id) {
-                        Log.i("Javen","获取动作列表失败.............."+call+"..."+id);
+                        Log.i("Javen","获取动作列表失败:"+call);
                     }
 
                     @Override
                     public void onResponse(String response, int id) {
-                        Log.i("Javen","获取动作列表成功.............."+response+"..."+id);
+                        Log.i("Javen","获取动作列表成功:"+response);
 //                        ActionEntity actionList = new Gson().fromJson(response, ActionEntity.class);
                         //保存时间
                         User user = new User();
@@ -78,12 +78,12 @@ public class UpdateAction {
                 .execute(new StringCallback() {
                     @Override
                     public void onError(Call call, Exception e, int id) {
-                        Log.i("Javen","获取舞蹈列表失败.............."+call+"..."+id);
+                        Log.i("Javen","获取舞蹈列表失败:"+call);
                     }
 
                     @Override
                     public void onResponse(String response, int id) {
-                        Log.i("Javen","获取舞蹈列表成功.............."+response+"..."+id);
+                        Log.i("Javen","获取舞蹈列表成功:"+response);
 //                        ActionEntity danceList = new Gson().fromJson(response, ActionEntity.class);
                        if (saveDanceResource != null){
                            saveDanceResource.save(response);

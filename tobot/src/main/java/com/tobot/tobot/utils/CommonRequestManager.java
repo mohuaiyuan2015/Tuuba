@@ -711,6 +711,7 @@ public class CommonRequestManager {
                 if (onCompletionListener!=null){
                     onCompletionListener.onCompletion(mp);
                 }
+                backMainScenario();
             }
         });
 
@@ -732,6 +733,7 @@ public class CommonRequestManager {
                 if (onErrorListener!=null){
                     onErrorListener.onError(mp,what,extra);
                 }
+                backMainScenario();
                 return false;
             }
         });
@@ -745,6 +747,7 @@ public class CommonRequestManager {
         if (mediaPlayer!=null){
             if (mediaPlayer.isPlaying()){
                 mediaPlayer.pause();
+                backMainScenario();
             }else {
                 mediaPlayer.start();
             }
@@ -758,6 +761,7 @@ public class CommonRequestManager {
     public void pausePlayMusic()throws Exception{
         if (mediaPlayer!=null ){
             mediaPlayer.pause();
+            backMainScenario();
         }
     }
 
@@ -778,6 +782,7 @@ public class CommonRequestManager {
         if (mediaPlayer!=null && mediaPlayer.isPlaying()){
             mediaPlayer.stop();
             mediaPlayer=null;
+            backMainScenario();
         }
     }
 
