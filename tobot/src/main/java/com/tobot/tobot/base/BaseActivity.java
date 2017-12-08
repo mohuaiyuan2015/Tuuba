@@ -43,13 +43,13 @@ public abstract class BaseActivity extends Activity {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        Log.e("Javen BaseActivity onKeyDown","==>keyCode:"+keyCode+"==>keyEvent:"+event);
+//        Log.e("Javen BaseActivity onKeyDown","==>keyCode:"+keyCode+"==>keyEvent:"+event);
         switch(keyCode){
 //            case KeyEvent.KEYCODE_VOLUME_UP:
             case KeyEvent.KEYCODE_BACK://需要识别长按事件
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 //                Log("开始摸头时间:"+dateFormat.format(new Date()));
-                if (event.getRepeatCount() < 40) {
+                if (event.getRepeatCount() < 30) {
 //                    if(event.getRepeatCount() == 0){
 //                        isKeyDown(keyCode,event);
 //                        isLongPressKey = false;
@@ -57,7 +57,7 @@ public abstract class BaseActivity extends Activity {
                     event.startTracking();
                     isLongPressKey = false;
 //                    Log("中间循环时间:"+dateFormat.format(new Date()));
-                }else if (event.getRepeatCount() > 40){
+                }else if (event.getRepeatCount() > 30){
 //                    isKeyDown(KeyEvent.FLAG_LONG_PRESS,event);
                     isLongPressKey = true;
 //                    Log("结束摸头时间:"+dateFormat.format(new Date()));
@@ -69,14 +69,14 @@ public abstract class BaseActivity extends Activity {
 
     @Override
     public boolean onKeyLongPress(int keyCode, KeyEvent event) {
-        Log.e("Javen BaseActivity onKeyLongPress","==>keyCode:"+keyCode+"==>keyEvent:"+event);
+//        Log.e("Javen BaseActivity onKeyLongPress","==>keyCode:"+keyCode+"==>keyEvent:"+event);
         lockLongPressKey = true;
         return super.onKeyLongPress(keyCode, event);
     }
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-        Log.e("Javen BaseActivity onKeyUp","==>keyCode:"+keyCode+"==>keyEvent:"+event);
+//        Log.e("Javen BaseActivity onKeyUp","==>keyCode:"+keyCode+"==>keyEvent:"+event);
         //Javen_BaseActivity_onKeyUp: keyCode:4
         // keyEvent:KeyEvent { action=ACTION_UP, keyCode=KEYCODE_BACK, scanCode=158, metaState=0, flags=0x208, repeatCount=0, eventTime=12233791, downTime=12231429, deviceId=1, source=0x101 }
         switch(keyCode){

@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import com.tobot.tobot.MainActivity;
 import com.tobot.tobot.R;
 import com.tobot.tobot.base.Constants;
+import com.tobot.tobot.control.Demand;
 import com.tobot.tobot.presenter.ICommon.ISceneV;
 import com.tobot.tobot.presenter.IPort.ILocal;
 import com.tobot.tobot.scene.BaseScene;
@@ -20,6 +21,7 @@ import com.tobot.tobot.utils.okhttpblock.callback.StringCallback;
 import com.tobot.tobot.utils.photograph.CameraInterface;
 import com.tobot.tobot.utils.photograph.CameraSurfaceView;
 import com.tobot.tobot.utils.photograph.DisplayUtil;
+import com.tobot.tobot.utils.socketblock.SocketConnectCoherence;
 import com.turing123.robotframe.RobotFrameManager;
 import com.turing123.robotframe.function.asr.ASR;
 import com.turing123.robotframe.function.asr.IASRHotWordUploadCallback;
@@ -37,8 +39,9 @@ import okhttp3.Call;
  */
 
 public class BLocal implements ILocal,CameraInterface.CamOpenOverCallback {
-    CameraSurfaceView surfaceView;
 
+    private CameraSurfaceView surfaceView;
+    private static BLocal mBLocal;
     private Context mContent;
     private ISceneV mISceneV;
     private LocalCommandCenter localCommandCenter;
@@ -50,7 +53,14 @@ public class BLocal implements ILocal,CameraInterface.CamOpenOverCallback {
     private String sn = "";//流水号
     private String uuid;
 
-    public BLocal(ISceneV mISceneV){
+    public static synchronized BLocal instance(ISceneV mISceneV) {
+        if (mBLocal == null) {
+            mBLocal = new BLocal(mISceneV);
+        }
+        return mBLocal;
+    }
+
+    private  BLocal(ISceneV mISceneV){
         this.mISceneV = mISceneV;
         this.mContent = (Context) mISceneV;
         this.mainActivity = (MainActivity) mISceneV;
@@ -60,7 +70,7 @@ public class BLocal implements ILocal,CameraInterface.CamOpenOverCallback {
 //            @Override
 //            public void run() {
 //                // TODO Auto-generated method stub
-//                CameraInterface.getInstance().doOpenCamera(BLocal.this);
+//                renderScreen();
 //            }
 //        };
 //        openThread.start();
@@ -114,15 +124,7 @@ public class BLocal implements ILocal,CameraInterface.CamOpenOverCallback {
             @Override
             protected void process(String name, String s) {
                 //4.1.1. 本示例中，当喊关键词中配置的词时将使机器人进入拍照
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        sn = "";
-                        CameraInterface.getInstance().doOpenCamera(BLocal.this);//不开屏幕时启用
-                        photograph();
-                    }
-                }). start();
-
+                carryThrough("");
                 //5. 命令执行完成后需明确告诉框架，命令处理结束，否则无法继续进行主对话流程。
                 this.localCommandComplete.onComplete();
             }
@@ -143,6 +145,27 @@ public class BLocal implements ILocal,CameraInterface.CamOpenOverCallback {
         localCommandCenter.add(localCommand);
     }
 
+    @Override
+    public void renderScreen() {
+        try {
+            CameraInterface.getInstance().doOpenCamera(BLocal.this);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void carryThrough(String var) {
+        this.sn = var;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                renderScreen();
+                Photograph();
+            }
+        }). start();
+    }
+
     private void initViewParams(){
         surfaceView = (CameraSurfaceView)mainActivity.findViewById(R.id.camera_surfaceview);
         ViewGroup.LayoutParams params = surfaceView.getLayoutParams();
@@ -159,20 +182,10 @@ public class BLocal implements ILocal,CameraInterface.CamOpenOverCallback {
         CameraInterface.getInstance().doStartPreview(holder, previewRate);//预览
     }
 
-    public void photograph(){//拍照
+    public void Photograph(){//拍照
         CameraInterface.getInstance().doTakePicture();
     }
 
-    public void camera(String sn){
-        this.sn = sn;
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                CameraInterface.getInstance().doOpenCamera(BLocal.this);//不开屏幕时启用
-                photograph();
-            }
-        }). start();
-    }
 
     public void upload(String path){
         uuid = Transform.getGuid();
@@ -187,12 +200,12 @@ public class BLocal implements ILocal,CameraInterface.CamOpenOverCallback {
                 .execute(new StringCallback() {
                     @Override
                     public void onError(Call call, Exception e, int id) {
-                        Log.i("Javen","照片发送失败......................"+call.toString());
+                        Log.i("Javen","照片发送失败:"+call.toString());
                     }
 
                     @Override
                     public void onResponse(String response, int id) {
-                        Log.i("Javen","照片发送成功......................"+response);
+                        Log.i("Javen","照片发送成功:"+response);
                     }
                 });
     }

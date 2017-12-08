@@ -8,14 +8,11 @@ import com.tobot.tobot.presenter.ICommon.ISceneV;
 import com.tobot.tobot.presenter.IPort.IArmtouch;
 import com.tobot.tobot.scene.BaseScene;
 import com.tobot.tobot.scene.SongScenario;
-import com.tobot.tobot.utils.TouchResponse_Library;
+import com.tobot.tobot.base.TouchResponse;
 import com.turing123.robotframe.function.keyin.IKeyInputObserver;
 import com.turing123.robotframe.function.keyin.KeyIn;
 import com.turing123.robotframe.function.keyin.KeyInputEvent;
 import com.turing123.robotframe.function.tts.TTS;
-
-import static android.media.AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE;
-import static android.media.AudioManager.MODE_NORMAL;
 
 /**
  * Created by Javen on 2017/8/30.
@@ -109,7 +106,7 @@ public class BArmtouch implements IArmtouch{
 
             default:
                 Log.i("Javen","未进入场景进入调侃");
-                tts.speak(TouchResponse_Library.getResponse());
+                tts.speak(TouchResponse.getResponse(mContent));
                 break;
         }
     }
@@ -118,7 +115,7 @@ public class BArmtouch implements IArmtouch{
         currentVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
         switch (direction){
             case "LEFT"://降低
-                if(currentVolume > 3){
+                if(currentVolume > 6){
                     mAudioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,AudioManager.ADJUST_LOWER,AudioManager.FX_FOCUS_NAVIGATION_UP);
                 } else {
                     tts.speak("再小声你就听不到我说话了");

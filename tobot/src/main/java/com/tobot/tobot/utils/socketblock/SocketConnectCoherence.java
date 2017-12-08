@@ -51,7 +51,7 @@ public class SocketConnectCoherence {
     public static synchronized SocketConnectCoherence instance() {
         if (mCoherence == null) {
             mCoherence = new SocketConnectCoherence();
-            Demand.instance(MainActivity.mContext).Demand(mCoherence);
+            Demand.instance(MainActivity.mContext).setDemand(mCoherence);
         }
         return mCoherence;
     }
@@ -179,7 +179,11 @@ public class SocketConnectCoherence {
                                 sendMsg(Joint.setRegister());
                             } else if (message.substring(2,3).equals("3")) {//拍照 31 33 30 30 30 35 30 30 30 30 31 46 42 39 46
                                 sendMsg(Joint.setResponse(Joint.PHOTO,message));
-                                MainActivity.mBLocal.camera(Joint.getSpecialRunning(message));
+//                                MainActivity.mBLocal.camera(Joint.getSpecialRunning(message));
+                                Message Msg = Message.obtain();
+                                Msg.what = 3;
+                                Msg.obj = message;
+                                handler.sendMessage(Msg);
                             } else if (message.substring(2,3).equals("4")) {//点播
                                 sendMsg(Joint.setDemandResponse(message));
                                 Message Msg = Message.obtain();
@@ -191,13 +195,19 @@ public class SocketConnectCoherence {
                                 //还没做
                             } else if (message.substring(2,3).equals("6")) {//出厂设置
                                 sendMsg(Joint.setResponse(Joint.RESTORE,message));
-                                //还没做
                                 UserDBManager.getManager().clear();
                             } else if (message.substring(2,3).equals("8")) {//舞蹈
 //                                sendMsg(Joint.setResponse(Joint.DANCE,message));
                                 sendMsg(Joint.setDanceResponse(message));
                                 Message Msg = Message.obtain();
                                 Msg.what = 8;
+                                Msg.obj = message;
+                                handler.sendMessage(Msg);
+                            }
+                            else if (message.substring(2,3).equals("9")) {//点播停止
+                                sendMsg(Joint.setDemandResponse(message));
+                                Message Msg = Message.obtain();
+                                Msg.what = 9;
                                 Msg.obj = message;
                                 handler.sendMessage(Msg);
                             }
@@ -229,6 +239,7 @@ public class SocketConnectCoherence {
                 return;
             }
             deseno = true;
+            Log.i(TAG,"执行次数:");
             switch (msg.what){
                 case 0:
                     break;
@@ -237,6 +248,7 @@ public class SocketConnectCoherence {
                 case 2:
                     break;
                 case 3:
+                    MainActivity.mBLocal.carryThrough(Joint.getSpecialRunning(message));
                     break;
                 case 4:
                     model.setCategoryId(Integer.parseInt(Joint.getCommaAmong(message,1)));
@@ -256,6 +268,9 @@ public class SocketConnectCoherence {
 //                    Demand.instance(MainActivity.mContext).setResource(model);
                     mdemandListener.setDemandResource(model);
                     break;
+                case 9:
+                    mdemandListener.stopDemand();
+                    break;
             }
         }
     };
@@ -266,12 +281,13 @@ public class SocketConnectCoherence {
         }
     }
 
-    public static void setDemandListener(DemandListener demandListener) {
+    public void setDemandListener(DemandListener demandListener) {
         mdemandListener = demandListener;
     }
 
     public interface DemandListener{
         void setDemandResource(DemandModel demand);
+        void stopDemand();
     };
     
 }

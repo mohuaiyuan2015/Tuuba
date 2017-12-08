@@ -13,6 +13,7 @@ import com.tobot.tobot.Listener.SimpleFrameCallback;
 import com.tobot.tobot.MainActivity;
 import com.tobot.tobot.R;
 import com.tobot.tobot.scene.CustomScenario;
+import com.turing123.robotframe.config.SystemConfig;
 import com.turing123.robotframe.function.motor.Motor;
 import com.turing123.robotframe.multimodal.action.Action;
 import com.ximalaya.ting.android.opensdk.constants.DTransferConstants;
@@ -26,11 +27,14 @@ import com.ximalaya.ting.android.opensdk.model.track.TrackList;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+
+import static com.tobot.tobot.MainActivity.mRobotFrameManager;
 
 /**
  * Created by YF-04 on 2017/8/21.
@@ -640,9 +644,16 @@ public class CommonRequestManager {
      */
     public boolean backMainScenario(){
         Log.d(TAG, "backMainScenario: ");
-       return  ((MainActivity)mContext).mRobotFrameManager.backMainScenario();
+       return mRobotFrameManager.backMainScenario();
     }
 
+    public void Automatic(){
+//        ((MainActivity)mContext).mRobotFrameManager.setChatMode(SystemConfig.CHAT_MODE_AUTO);
+    }
+    public void Diastasis(){
+//        ((MainActivity)mContext).mRobotFrameManager.toLostScenario();
+//        ((MainActivity)mContext).mRobotFrameManager.setChatMode(SystemConfig.CHAT_MODE_MANUAL);
+    }
 
     /**
      * 初始化音乐播放器
@@ -798,6 +809,12 @@ public class CommonRequestManager {
         }
         motor.doAction(Action.buildBodyAction(action, Action.PRMTYPE_EXECUTION_TIMES, 1), simpleFrameCallback);
     }
+
+    public String getString(int id){
+        String string=mContext.getResources().getString(id);
+        return string;
+    }
+
 
 
 }

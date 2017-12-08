@@ -111,6 +111,33 @@ public class TobotUtils {
     }
 
     /**
+     * 是否在场景
+     * @param Scenario
+     * @return
+     */
+    public static boolean isInScenario(String Scenario){
+        if (Scenario.equals("os.sys.song") || Scenario.equals("os.sys.story") || Scenario.equals("os.sys.dance")){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    /**
+     * 在哪个场景
+     * @param Scenario
+     * @return
+     */
+    public static boolean whichScenario(String Scenario){
+        if (Scenario.equals("os.sys.song") || Scenario.equals("os.sys.story")){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+
+    /**
      * 机器人联网状态
      * @return
      */

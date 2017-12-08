@@ -43,8 +43,8 @@ public class BScenario implements IScene {
 //        scenarioManager.addScenario(mDanceScenario);
 
 
-        scenarioManager.addScenario(new SongScenario(mISceneV));
-//        scenarioManager.addScenario(new StoryScenario(mISceneV));
+        scenarioManager.addScenario(SongScenario.instance(mISceneV));
+        scenarioManager.addScenario(new StoryScenario(mISceneV));
         scenarioManager.addScenario(new DanceScenario(mISceneV));
         scenarioManager.addScenario(new VolumeScenario(mContent,mAudioManager));
         scenarioManager.addScenario(new CustomActionScenario(mContent,"胳膊控制"));

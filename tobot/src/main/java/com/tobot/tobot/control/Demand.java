@@ -29,12 +29,12 @@ public class Demand {
         return demand;
     }
 
-    public void Demand(SocketConnectCoherence mCoherence){
+    public void setDemand(SocketConnectCoherence mCoherence){
         this.mCoherence = mCoherence;
         setResource();
     }
 
-    public static void setResource(){
+    public void setResource(){
         if (mCoherence != null) {
             mCoherence.setDemandListener(new SocketConnectCoherence.DemandListener() {
                 @Override
@@ -49,6 +49,11 @@ public class Demand {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
+                }
+
+                @Override
+                public void stopDemand() {
+                    stopDemand();
                 }
             });
         }
@@ -70,9 +75,6 @@ public class Demand {
     public void stopDemand(){
         DemandFactory demandFactory = DemandFactory.getInstance(context);
         try {
-            if (TobotUtils.isNotEmpty(MainActivity.mRobotFrameManager)){
-                MainActivity.mRobotFrameManager.toLostScenario();
-            }
             demandFactory.stopPlayMusic();
             Log.i("Javen","点播停止:");
         } catch (Exception e) {

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.tobot.tuuba.MainActivity">
+    tools:context="com.tobot.tobot.MainActivity">
 
     <LinearLayout
         android:id="@+id/llzh"
@@ -87,10 +87,9 @@
         android:id="@+id/etphone"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="20dp"
-        android:hint="请输入绑定号码:"
         android:layout_below="@+id/tvASR"
-        android:layout_alignParentStart="true" />
+        android:textSize="20dp"
+        android:hint="请输入绑定号码:"/>
 
     <Button
         android:id="@+id/btn_shutdown"
@@ -99,9 +98,7 @@
         android:text="test"
         tools:layout_editor_absoluteX="8dp"
         tools:layout_editor_absoluteY="16dp"
-        android:layout_below="@+id/etphone"
-        />
-
+        android:layout_below="@+id/etphone"/>
 
     <ImageView
         android:id="@+id/im_picture"

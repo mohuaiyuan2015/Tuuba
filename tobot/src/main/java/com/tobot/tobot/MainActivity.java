@@ -14,7 +14,6 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.google.gson.Gson;
 import com.tobot.tobot.Listener.MainScenarioCallback;
 import com.tobot.tobot.base.BaseActivity;
 import com.tobot.tobot.base.Constants;
@@ -26,7 +25,6 @@ import com.tobot.tobot.control.Demand;
 import com.tobot.tobot.control.SaveAction;
 import com.tobot.tobot.db.bean.UserDBManager;
 import com.tobot.tobot.db.model.User;
-import com.tobot.tobot.entity.ScoffEntity;
 import com.tobot.tobot.function.AssembleFunction;
 import com.tobot.tobot.presenter.BRealize.BArmtouch;
 import com.tobot.tobot.presenter.BRealize.BBattery;
@@ -41,6 +39,7 @@ import com.tobot.tobot.scene.BaseScene;
 import com.tobot.tobot.scene.CustomScenario;
 
 import com.tobot.tobot.presenter.BRealize.BScenario;
+import com.tobot.tobot.scene.SongScenario;
 import com.tobot.tobot.utils.AppTools;
 import com.tobot.tobot.utils.SHA1;
 import com.tobot.tobot.utils.Transform;
@@ -48,7 +47,7 @@ import com.tobot.tobot.utils.okhttpblock.OkHttpUtils;
 import com.tobot.tobot.utils.okhttpblock.callback.StringCallback;
 import com.tobot.tobot.utils.socketblock.Joint;
 import com.tobot.tobot.utils.TobotUtils;
-import com.tobot.tobot.utils.TouchResponse_Library;
+import com.tobot.tobot.base.TouchResponse;
 import com.tobot.tobot.utils.bluetoothblock.Ble;
 import com.tobot.tobot.utils.socketblock.Const;
 import com.tobot.tobot.utils.socketblock.NetManager;
@@ -59,7 +58,6 @@ import com.turing123.robotframe.config.SystemConfig;
 import com.turing123.robotframe.event.AppEvent;
 import com.turing123.robotframe.function.FunctionManager;
 import com.turing123.robotframe.function.IInitialCallback;
-import com.turing123.robotframe.function.asr.ASRError;
 import com.turing123.robotframe.function.asr.IASRFunction;
 import com.turing123.robotframe.function.cloud.Cloud;
 import com.turing123.robotframe.function.cloud.IAutoCloudCallback;
@@ -78,8 +76,6 @@ import com.turing123.robotframe.multimodal.expression.EmojNames;
 import com.turing123.robotframe.multimodal.expression.FacialExpression;
 import com.turing123.robotframe.scenario.ScenarioManager;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -87,7 +83,6 @@ import butterknife.BindView;
 import butterknife.OnClick;
 import okhttp3.Call;
 
-import static android.R.attr.data;
 import static com.turing123.robotframe.function.keyin.KeyInputEvent.KEYCODE_HEAD;
 import static com.turing123.robotframe.multimodal.action.Action.PRMTYPE_EXECUTION_TIMES;
 import static java.lang.Thread.sleep;
@@ -301,7 +296,7 @@ public class MainActivity extends BaseActivity implements ISceneV {
     }
 
     //本地命令
-    private void onLocal() { mBLocal = new BLocal(MainActivity.this);  }
+    private void onLocal() { mBLocal = BLocal.instance(MainActivity.this);  }
 
     //电量检测
     private void onBattery(){
@@ -349,7 +344,7 @@ public class MainActivity extends BaseActivity implements ISceneV {
 //            //首次使用提示语,动作等
 //        }
        if (AppTools.netWorkAvailable(this) && !isInitiativeOff && !whence) {//自动联网成功
-           tts.speak("联网成功,我们可以愉快的聊天了");
+           tts.speak(getResources().getString(R.string.Connection_Succeed),ittsCallback);
            mFacialExpression.emoj = EmojNames.HAPPY;
            mExpression.showExpression(mFacialExpression, new ExpressionCallback());
            motor.doAction(Action.buildBodyAction(BodyActionCode.ACTION_17,PRMTYPE_EXECUTION_TIMES,1),new SimpleFrameCallback());
@@ -423,9 +418,9 @@ public class MainActivity extends BaseActivity implements ISceneV {
                                 }
                                 break;
                             case "connection.status":
-                                if (packet.getInt("arg1") == 1 && !isInitiativeOff) {//非主动
-                                    detectionTime.schedule(new DetectionTimerTask(),4000,4000);//4秒钟
+                                if (packet.getInt("arg1") == 1 && isInitiativeOff) {//非主动
                                     Log("网络状态监测:断网了");
+                                    detectionTime.schedule(new DetectionTimerTask(),5000,10000);//10秒钟
                                 }
                                 break;
                             case "asr.status":
@@ -434,8 +429,8 @@ public class MainActivity extends BaseActivity implements ISceneV {
                                 if(packet.getInt("arg1") == 4){
                                     if(asrContent.contains("没有检查到网络")) {
                                         if (!hintConnect) {
-                                            Log("asr没有检查到网络");
-                                            detectionTime.schedule(new DetectionTimerTask(),10000,10000);//10秒钟
+                                            Log("ASR没有检查到网络");
+                                            detectionTime.schedule(new DetectionTimerTask(),5000,10000);//10秒钟
                                         }
                                     }
                                 }else if(packet.getInt("arg1") == 3 && asrContent != null){// packet.getString("arg2") != null  //收到对话
@@ -448,7 +443,7 @@ public class MainActivity extends BaseActivity implements ISceneV {
                                         activeTimer = new Timer();
                                     }
                                     if(hintConnect){//断网收到语音提示-->离线语音
-                                        tts.speak(getResources().getString(R.string.Hint_Break), ittsCallback);
+                                        tts.speak(getResources().getString(R.string.Connection_Break_Hint), ittsCallback);
                                     }
                                     isSquagging = true;
                                     Log("结束倒计时");
@@ -477,7 +472,7 @@ public class MainActivity extends BaseActivity implements ISceneV {
                     }
                     break;
                 case Constants.AWAIT_DORMANT ://自动休眠
-                    if (isDormant) {
+                    if (isDormant && !TobotUtils.isInScenario(mScenario)) {
                         isDormant = false;
                         isWakeup = true;
                         isOFF_HINT = true;
@@ -495,12 +490,12 @@ public class MainActivity extends BaseActivity implements ISceneV {
                     mCloud.requestActiveTalk(new IAutoCloudCallback() {
                         @Override
                         public void onResult(Behaviors behaviors) {
-                            Log.i("Javen","主动交互请求成功:"+behaviors);
+                            Log("主动交互请求成功:"+behaviors);
                         }
 
                         @Override
                         public void onError(String s) {
-                            Log.i("Javen","主动交互请求失败:"+s);
+                            Log("主动交互请求失败:"+s);
                         }
                     });
                     break;
@@ -512,11 +507,11 @@ public class MainActivity extends BaseActivity implements ISceneV {
     };
 
 
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-    ScoffEntity mScoffEntity;
     boolean isFeelHead = true;//摸头启动ap联网
+
     @Override
     public void isKeyDown(int keyCode, KeyEvent event) {
         Log("触摸事件===>keyCode:"+keyCode+"KeyEvent:"+event);
@@ -528,8 +523,17 @@ public class MainActivity extends BaseActivity implements ISceneV {
                         isDormant = true;
                         isWakeup = false;
                         mRobotFrameManager.wakeup();
-                    } else if (isInterrupt || mScenario.equals("os.sys.song")) {
+                    } else if (isInterrupt || TobotUtils.isInScenario(mScenario)) {
                         Log("触摸--打断"+mScenario);
+                        switch (mScenario) {
+                            case "os.sys.song":
+//                                SongScenario.instance(this).Backspacing();
+                            break;
+                            case "os.sys.story":
+                                break;
+                            case "os.sys.dance":
+                                break;
+                        }
                         KeyInputEvent mKeyInputEvent = new KeyInputEvent(keyCode, KEYCODE_HEAD);
                         mRobotFrameManager.interrupt(SystemConfig.INTERRUPT_TYPE_TOUCH, null);
                         isInterrupt = false;
@@ -540,15 +544,14 @@ public class MainActivity extends BaseActivity implements ISceneV {
                             if (l < 4000) {//连续点击
                                 Log("触摸--连续点击");
                                 onBle();
-//                                mScoffEntity = TouchResponse_Library.getResponse(true);
-//                                tts.speak(mScoffEntity.getVar(), ittsCallback);
                             } else {
                                 Log("触摸--单击");
                                 exitTime = System.currentTimeMillis();
-                                tts.speak(TouchResponse_Library.getResponse(), ittsCallback);
+                                tts.speak(TouchResponse.getResponse(this), ittsCallback);
                                 Demand.instance(this).stopDemand();
                             }
                         } catch (Exception e) {
+                            e.printStackTrace();
                         }
                     }
                     break;
@@ -557,15 +560,15 @@ public class MainActivity extends BaseActivity implements ISceneV {
                     if (isFeelHead) {
                         isInitiativeOff = true;//主动断网
                         mBConnect.shunt();//启动ap联网
-                        tts.speak("联网模式已启动,请重新帮我联网或长摸头三秒解除联网",ittsCallback);
+                        tts.speak(getResources().getString(R.string.Connection_Start),ittsCallback);
                         mFacialExpression.emoj = EmojNames.EXPECT;
                         mExpression.showExpression(mFacialExpression, new ExpressionCallback());
                         motor.doAction(Action.buildBodyAction(BodyActionCode.ACTION_95, PRMTYPE_EXECUTION_TIMES, 1), new SimpleFrameCallback());
                         isFeelHead = false;
                     } else if (isFeelHead == false) {
-                        isInitiativeOff = true;//关掉主动断网
+                        isInitiativeOff = false;//关掉主动断网
                         mBConnect.shut();//关闭ap联网
-                        tts.speak("联网模式已解除",ittsCallback);
+                        tts.speak(getResources().getString(R.string.Connection_Close),ittsCallback);
                         mFacialExpression.emoj = EmojNames.DEPRESSED;
                         mExpression.showExpression(mFacialExpression, new ExpressionCallback());
                         motor.doAction(Action.buildBodyAction(BodyActionCode.ACTION_STAND_STILL, PRMTYPE_EXECUTION_TIMES, 1), new SimpleFrameCallback());
@@ -583,7 +586,7 @@ public class MainActivity extends BaseActivity implements ISceneV {
     }
 
 
-//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
     ITTSCallback ittsCallback = new ITTSCallback() {
@@ -591,13 +594,18 @@ public class MainActivity extends BaseActivity implements ISceneV {
         @Override
         public void onStart(String s) {
         Log("开始语音播报TTS:"+s);
+            isInterrupt = true;
         }
 
         @Override
-        public void onPaused() { }
+        public void onPaused() {
+            isInterrupt = false;
+        }
 
         @Override
-        public void onResumed() { }
+        public void onResumed() {
+            isInterrupt = true;
+        }
 
         @Override
         public void onCompleted() {
@@ -606,7 +614,7 @@ public class MainActivity extends BaseActivity implements ISceneV {
 //                anewConnect = false;
 //                mBConnect.shunt();//重新联网 -- 需要考虑是否要直接启动还是摸头三秒启动
 //            }
-//            //自主休眠禁止唤醒
+           //自主休眠禁止唤醒
 //            try {
 //                if (mScoffEntity.getDormant()) {
 //                    Log("进入自主休眠10分钟" + isInterrupt);
@@ -622,6 +630,7 @@ public class MainActivity extends BaseActivity implements ISceneV {
 //            } catch (NullPointerException e) {
 //                e.printStackTrace();
 //            }
+            isInterrupt = false;
         }
 
         @Override
@@ -669,8 +678,6 @@ public class MainActivity extends BaseActivity implements ISceneV {
         isDormant = dormant;//自动休眠
         isWakeup = true;//允许唤醒
         isOFF_HINT = true;
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        Log("动作下发时间:"+dateFormat.format(new Date()));
         motor.doAction(Action.buildBodyAction(BodyActionCode.ACTION_8, PRMTYPE_EXECUTION_TIMES, 1), new SimpleFrameCallback());
     }
 
@@ -679,6 +686,13 @@ public class MainActivity extends BaseActivity implements ISceneV {
     public void getScenario(String scenario) {
         mScenario = scenario;
         mBArmtouch.getScenario(scenario);
+        //理论上不需要,因为asr检测很频繁(断网后asr会切换成离线)
+//        if (!TobotUtils.isInScenario(mScenario) && isDormant){
+//            //等待睡眠
+//            dormantTimer.cancel();
+//            dormantTimer = new Timer();
+//            dormantTimer.schedule(new DormantTimerTask(),300000000);//等待5分钟进入休眠
+//        }
     }
 
     @Override
@@ -699,7 +713,6 @@ public class MainActivity extends BaseActivity implements ISceneV {
     @OnClick(R.id.btn_close)
     public void close(){
         //关闭ap联网
-        Log("关闭AP联网");
         mBConnect.shut();
     }
 
@@ -713,7 +726,8 @@ public class MainActivity extends BaseActivity implements ISceneV {
         //发送注册
 //        manager.sendMsg(Transform.HexString2Bytes(Joint.setRegister()));
 //        manager.demandDance();
-        bindRobot();
+//        bindRobot();
+        Log(1/0+"");
 
     }
 
@@ -721,7 +735,7 @@ public class MainActivity extends BaseActivity implements ISceneV {
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-    private boolean hintConnect;//断网提示连接--接下来看下与isOff_line合并
+    private boolean hintConnect;
 
     private class DetectionTimerTask extends TimerTask {
         public void run() {
@@ -738,7 +752,7 @@ public class MainActivity extends BaseActivity implements ISceneV {
                 detectionTime.schedule(new TimeMachineTimerTask(),0,30000);
 //                TimeMachine.schedule(new TimeMachineTimerTask(),0,30000);
             }else if (AppTools.netWorkAvailable(MainActivity.this)){
-                Log("检测到异常断网重新连接:");
+                Log("检测到异常断网已重新连接:");
                 functionManager.resetFunction(AppEvent.FUNC_TYPE_ASR);
                 hintConnect = false;
                 mBConnect.onAgain();//检测是否需要绑定
@@ -746,7 +760,7 @@ public class MainActivity extends BaseActivity implements ISceneV {
                 mFacialExpression.emoj = EmojNames.TIRED;
                 mExpression.showExpression(mFacialExpression, new ExpressionCallback());
                 motor.doAction(Action.buildBodyAction(BodyActionCode.ACTION_45, PRMTYPE_EXECUTION_TIMES, 1), new SimpleFrameCallback());
-                tts.speak("网络已恢复连接,不过你给我连的这是什么破网络");
+                tts.speak(getResources().getString(R.string.Connection_Recover),ittsCallback);
                 detectionTime.cancel();
                 detectionTime = new Timer();
             }
@@ -756,7 +770,7 @@ public class MainActivity extends BaseActivity implements ISceneV {
     private class TimeMachineTimerTask extends TimerTask {
         public void run() {
             if (hintConnect && !isOFF_HINT)
-                tts.speak(TouchResponse_Library.getBrokenNetwork(), ittsCallback);
+                tts.speak(getResources().getString(R.string.Connection_Break_Hint), ittsCallback);
         }
     }
 
@@ -831,87 +845,44 @@ public class MainActivity extends BaseActivity implements ISceneV {
 
 
 
-//TEST--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//TEST------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 
     int bind = 0;
-//    private void bindRobot() {
-//        String uuid = Transform.getGuid();
-//
-//        OkHttpUtils.get()
-//                .url(Constants.ROBOT_BOUND + uuid + "/" + SHA1.gen(Constants.identifying + uuid)
-//                        + "/" + TobotUtils.getDeviceId(Constants.DeviceId, Constants.Path)
-//                        + "/" + TobotUtils.getDeviceId(Constants.Ble_Name, Constants.Path)
-//                        + "/" + editText.getText().toString())
-//                .addParams("nonce", uuid)//伪随机数
-//                .addParams("sign", SHA1.gen(Constants.identifying + uuid))//签名
-//                .addParams("robotId", TobotUtils.getDeviceId(Constants.DeviceId, Constants.Path))//机器人设备ID
-//                .addParams("bluetooth", TobotUtils.getDeviceId(Constants.Ble_Name, Constants.Path))//蓝牙名称
-//                .addParams("mobile", editText.getText().toString())//手机号
-//                .build()
-//                .execute(new StringCallback() {
-//                    @Override
-//                    public void onError(Call call, Exception e, int id) {
-//                        bind++;
-//                        if (bind < 3) {
-//                            bindRobot();
-//                        } else {
-//                            bind = 0;
-//                        }
-//                        Log.i("Javen", "绑定失败===>call:" + call + "bind:" + bind);
-//                    }
-//
-//                    @Override
-//                    public void onResponse(String response, int id) {
-//                        Log.i("Javen", "绑定===>response:" + response + "id:" + id);
-//                    }
-//                });
-//    }
+    private void bindRobot() {
+        String uuid = Transform.getGuid();
 
+        OkHttpUtils.get()
+                .url(Constants.ROBOT_BOUND + uuid + "/" + SHA1.gen(Constants.identifying + uuid)
+                        + "/" + TobotUtils.getDeviceId(Constants.DeviceId, Constants.Path)
+                        + "/" + TobotUtils.getDeviceId(Constants.Ble_Name, Constants.Path)
+                        + "/" + editText.getText().toString())
+                .addParams("nonce", uuid)//伪随机数
+                .addParams("sign", SHA1.gen(Constants.identifying + uuid))//签名
+                .addParams("robotId", TobotUtils.getDeviceId(Constants.DeviceId, Constants.Path))//机器人设备ID
+                .addParams("bluetooth", TobotUtils.getDeviceId(Constants.Ble_Name, Constants.Path))//蓝牙名称
+                .addParams("mobile", editText.getText().toString())//手机号
+                .build()
+                .execute(new StringCallback() {
+                    @Override
+                    public void onError(Call call, Exception e, int id) {
+                        bind++;
+                        if (bind < 3) {
+                            bindRobot();
+                        } else {
+                            bind = 0;
+                        }
+                        Log.i("Javen", "绑定失败===>call:" + call + "bind:" + bind);
+                    }
 
-
-    long startTime;
-    long endTime;
-    private void bindRobot(){
-        String speech="An abstract representation of a file system entity identified by a pathname. The pathname may be abs";
-        Log.d("SongScenario", "speech: "+speech.length());
-
-//        for (int i=0;i<10;i++){
-            startTime=0;   //获取开始时间
-            endTime=0; //获取结束时间
-            tts.speak(speech, new ITTSCallback() {
-                @Override
-                public void onStart(String s) {
-                    startTime=System.currentTimeMillis();
-                    Log.d("SongScenario", "startTime: "+startTime);
-                }
-
-                @Override
-                public void onPaused() {
-
-                }
-
-                @Override
-                public void onResumed() {
-
-                }
-
-                @Override
-                public void onCompleted() {
-                    endTime=System.currentTimeMillis();
-                    Log.d("SongScenario", "endTime: "+endTime);
-                    Log.d("SongScenario", "程序运行时间： "+(endTime-startTime)+"ms");
-                }
-
-                @Override
-                public void onError(String s) {
-
-                }
-            }); //测试的代码段
-
-//        }
+                    @Override
+                    public void onResponse(String response, int id) {
+                        Log.i("Javen", "绑定===>response:" + response + "id:" + id);
+                    }
+                });
     }
+
 
 
 }

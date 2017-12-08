@@ -22,26 +22,11 @@ public class Constants {
     public static final int VIEW_INVISIBLE=64646;
     public static final int VIEW_GONE=325482;
 
-
+    public static final String SEPARATOR_BETWEEN_SPEECH_AND_ACTION="#,#";
     public static final String SEPARATOR_BETWEEN_KIND_AND_BYDY_TEXT="##";
-    public static final String SEPARATOR_BETWEEN_SPEECH_AND_ACTION="#s_a#";
-    public static final String SEPARATOR_BETWEEN_ACTION_AND_EXPRESSION="#a_e#";
-
-    public static final String SEPARATOR_BETWEEN_ACTION_AND_ACTION="#,#";
-    public static final String SEPARATOR_BETWEEN_EXPRESSION_AND_EXPRESSION="#_#";
-
-
-
     public static final String KIND_ACTION="Action";
     public static final String KIND_DANCE="Dance";
     public static final String KIND_FUNCTION="Function";
     public static final String KIND_SPEECH="Speech";
-
-
-    public static final String FUNCTION_CLOSE_CHAY="close_chat";
-    public static final String FUNCTION_OPEN_CHAY="open_chat";
-    public static final String FUNCTION_FALL_ASLEEP="fall_asleep";
-    public static final String FUNCTION_AWAKEN="awaken";
-
 
 }

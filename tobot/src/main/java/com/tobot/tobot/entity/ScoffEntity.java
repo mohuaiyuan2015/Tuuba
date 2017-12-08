@@ -5,22 +5,22 @@ package com.tobot.tobot.entity;
  */
 
 public class ScoffEntity {
-    private String var;
-    private boolean dormant;
+    private String voice;
+    private int active;
 
-    public String getVar() {
-        return var;
+    public String getVoice() {
+        return voice;
     }
 
-    public void setVar(String var) {
-        this.var = var;
+    public void setVoice(String voice) {
+        this.voice = voice;
     }
 
-    public boolean getDormant() {
-        return dormant;
+    public int getActive() {
+        return active;
     }
 
-    public void setDormant(boolean dormant) {
-        this.dormant = dormant;
+    public void setActive(int active) {
+        this.active = active;
     }
 }

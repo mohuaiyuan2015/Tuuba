@@ -7,7 +7,7 @@ import java.io.Serializable;
  */
 
 public class StoryEntity implements Serializable {
-    private long id;
+    private String id;//20171207-Javen(long改string)
     private String kind;
     /**
      * 故事名称(storyTitle)
@@ -16,11 +16,11 @@ public class StoryEntity implements Serializable {
     private String text_spare;
     private String url;
 
-    public long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

@@ -14,13 +14,16 @@ import com.google.gson.JsonObject;
 import com.tobot.tobot.MainActivity;
 
 import com.tobot.tobot.Listener.SimpleFrameCallback;
+import com.tobot.tobot.R;
 import com.tobot.tobot.entity.DetailsEntity;
 import com.tobot.tobot.entity.SongEntity;
 import com.tobot.tobot.presenter.ICommon.ISceneV;
 import com.tobot.tobot.utils.AudioUtils;
 import com.tobot.tobot.utils.CommonRequestManager;
 import com.tobot.tobot.utils.TobotUtils;
+import com.turing123.robotframe.function.motor.IMotorCallback;
 import com.turing123.robotframe.function.motor.Motor;
+import com.turing123.robotframe.function.tts.ITTSCallback;
 import com.turing123.robotframe.function.tts.TTS;
 import com.turing123.robotframe.multimodal.Behavior;
 import com.turing123.robotframe.multimodal.action.Action;
@@ -60,7 +63,7 @@ public class DanceScenario implements IScenario{
 
     private Context mContext;
     private ISceneV mISceneV;
-    private MediaPlayer mediaPlayer;
+//    private MediaPlayer mediaPlayer;
     private String interrupt;
     private boolean createState;
     private DetailsEntity details;
@@ -116,6 +119,7 @@ public class DanceScenario implements IScenario{
 
     @Override
     public void onScenarioUnload() {
+        mISceneV.getScenario("os.sys.Dance_stop");
     }
 
     @Override
@@ -129,18 +133,18 @@ public class DanceScenario implements IScenario{
     public boolean onExit() {
         Log.d(TAG, "onExit: ");
         Log.d(TAG, "退出舞蹈场景 ");
-
+        mISceneV.getScenario("os.sys.dance_stop");
         try {
-            if (mediaPlayer!=null &&mediaPlayer.isPlaying()){
-                mediaPlayer.stop();
-                mediaPlayer.release();//释放资源
+            if (getMediaPlayer()!=null && getMediaPlayer().isPlaying()){
+                getMediaPlayer().stop();
+                getMediaPlayer().release();//释放资源
             }
-            mediaPlayer = null;
+            manager.setMediaPlayer(null);
         } catch (IllegalStateException e) {
             e.printStackTrace();
         }
 		
-        //scenarioManager.quitCurrentScenario();
+        scenarioManager.quitCurrentScenario();
 
 //        manager.mediaPlayonExit(mediaPlayer);
 
@@ -154,8 +158,16 @@ public class DanceScenario implements IScenario{
         if (behavior.results != null) {
             Log.i("Javen","进入跳舞场景.......");
             Log.d(TAG, "进入跳舞场景.......: ");
-//            mISceneV.getScenario("os.sys.song");
 
+            if (getMediaPlayer()!=null && getMediaPlayer().isPlaying()){
+                Log.d(TAG, "正在播放音乐: ");
+                return false;
+            }else {
+                Log.d(TAG, "没有在播放音乐: ");
+            }
+
+//            mISceneV.getScenario("os.sys.song");
+            mISceneV.getScenario("os.sys.dance");
             Behavior.IntentInfo intent = behavior.intent;
             JsonObject parameters = intent.getParameters();
             songEntity = new Gson().fromJson(parameters, SongEntity.class);
@@ -169,23 +181,25 @@ public class DanceScenario implements IScenario{
 
             try {
                 initBackgroundMusic(DANCE_BACKGROUND_MUSIC_Dir);
-
                 initActionConfig();
                 Log.d(TAG, "actionMap: "+actionMap.toString());
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
-//            //mohuaiyuan 暂时注释 20170926 仅仅用于测试
-//            onExit();
+
             try {
                 if (songName==null || songName.length()<1){
                     executeSong();
                 }else {
-                    prepareExecuteSong(songName);
-                    //mohuaiyuan 仅仅用于测试 20170926
-//                    prepareExecuteSong("我是一个机器人");
+                    try {
+                        prepareExecuteSong(songName);
+                    }catch (Exception e){
+                        Log.e(TAG, "指定舞蹈 不存在 e : "+e.getMessage() );
+                        tts.speak(manager.getString(R.string.noExistDance));
+                        e.printStackTrace();
+                        onExit();
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -203,7 +217,7 @@ public class DanceScenario implements IScenario{
         boolean isContains=false;
         for (int i=0;i<musicNames.size();i++){
             String temp=musicNames.get(i);
-            if (temp.toLowerCase().contains(songName) ){
+            if (temp.toLowerCase().contains(songName.toLowerCase())  ){
                 position=i;
                 isContains=true;
                 break;
@@ -212,7 +226,7 @@ public class DanceScenario implements IScenario{
         if (isContains){
             executeSong(position);
         }else {
-            executeSong(0);
+            throw new Exception("no exist dance");
         }
 
     }
@@ -220,12 +234,13 @@ public class DanceScenario implements IScenario{
 
     @Override
     public boolean onUserInterrupted(int i, Bundle bundle) {
-        Log.d(TAG, "onUserInterrupted: ");
+        Log.d(TAG, "DanceScenario onUserInterrupted: ");
 
         Log.d(TAG, "bundle!=null: " + (bundle != null));
         try {
             if (bundle != null) {
                 Log.i("Javen", bundle.toString() + "..." + i);
+                Log.i(TAG, bundle.toString() + "..." + i);
                 interrupt = bundle.getString("interrupt_extra_voice_cmd");
             }
 
@@ -233,24 +248,29 @@ public class DanceScenario implements IScenario{
                 try {
                     if (interrupt.contains("暂停")) {
                         Log.d(TAG, "暂停: ");
-//                    Log.i("Javen", "暂停");
+                        mISceneV.getScenario("os.sys.dance_stop");
 //                    mediaPlayer.pause();
                     }
                     if (interrupt.contains("不想听了") || interrupt.contains("好了") || interrupt.contains("可以了")) {
                         Log.d(TAG, "不想听了 or 好了  or 可以了: ");
-//                    Log.i("Javen", "不想听了");
 //                    mediaPlayer.stop();
+                        mISceneV.getScenario("os.sys.dance_stop");
+                        interruptDance();
                     }
-                    if (interrupt.contains("继续") && !mediaPlayer.isPlaying()) {
+                    if (interrupt.contains("继续") && !getMediaPlayer().isPlaying()) {
                         Log.d(TAG, "继续: ");
-//                    Log.i("Javen", "继续");
+                        mISceneV.getScenario("os.sys.dance");
 //                    mediaPlayer.start();
                     }
                     //mohuaiyuan 仅仅用于测试 20170912
                     if (interrupt.contains("退出") || interrupt.contains("推出")) {
                         Log.d(TAG, "退出: ");
-                        beforeExit();
-//                    onExit();
+                        mISceneV.getScenario("os.sys.dance_stop");
+                        //mohuaiyuan 20171208   5、摸头或语音舞蹈打断，音乐马上停止，并下发直立动作，
+//                        beforeExit();
+                        interruptDance();
+                        onExit();
+
                     }
 
 //                //mohuaiyuan 测试 跳下一个舞蹈 ，仅仅用于测试 20170912
@@ -288,7 +308,7 @@ public class DanceScenario implements IScenario{
                         if (result < 0) {
                             switch (result) {
                                 case AudioUtils.CURRENT_LEVEL_IS_MAX_VOLUME_LEVEL:
-                                    tts.speak("已经是最大声了哦", null);
+                                    tts.speak(manager.getString(R.string.maxMusicVolume), null);
                                     break;
 
                                 default:
@@ -296,7 +316,7 @@ public class DanceScenario implements IScenario{
 
                             }
                         } else {
-                            tts.speak("好的 ，我声音大点", null);
+                            tts.speak(manager.getString(R.string.raiseMusicVolume), null);
                         }
                         currentVolumeLevel = audioUtils.getCurrentVolume();
                         Log.d(TAG, "currentVolumeLevel: " + currentVolumeLevel);
@@ -313,7 +333,7 @@ public class DanceScenario implements IScenario{
                         if (result < 0) {
                             switch (result) {
                                 case AudioUtils.CURRENT_LEVEL_IS_MIN_VOLUME_LEVEL:
-                                    tts.speak("已经是最小声了哦", null);
+                                    tts.speak(manager.getString(R.string.minMusicVolume), null);
                                     break;
 
                                 default:
@@ -321,7 +341,7 @@ public class DanceScenario implements IScenario{
 
                             }
                         } else {
-                            tts.speak("嗯，我小声点", null);
+                            tts.speak(manager.getString(R.string.lowerMusicVolume), null);
                         }
                         currentVolumeLevel = audioUtils.getCurrentVolume();
                         Log.d(TAG, "currentVolumeLevel: " + currentVolumeLevel);
@@ -330,27 +350,36 @@ public class DanceScenario implements IScenario{
 
 
                 } catch (IllegalStateException e) {
+                    Log.d(TAG, "IllegalStateException e: "+e.getMessage());
 
 
                 }
             } else if (TobotUtils.isNotEmpty(bundle.getString("interrupt_extra_touch_keyEvent")) && i == 2) {
-                Log.i("Javen", "头部触摸");
+                Log.d(TAG, "进入打断处理");
+                interruptDance();
+                this.onExit();
             }
-        } catch (Exception e) {
-
+        } catch (NullPointerException e) {
+            Log.d(TAG, "进入打断处理:catch 1");
+            if (TobotUtils.isEmpty(bundle) && i == 2) {
+                Log.d(TAG, "进入打断处理:catch 2");
+                interruptDance();
+                this.onExit();
+            }
         }
         return true;
     }
 
+    
     private void beforeExit() {
         Log.d(TAG, "beforeExit: ");
         try{
-            if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+            if (getMediaPlayer() != null && getMediaPlayer().isPlaying()) {
 //                mediaPlayer.stop();
 //                mediaPlayer.release();
 //                mediaPlayer = null;
             } else {
-                Log.d(TAG, "mediaPlayer!=null: " + (mediaPlayer != null));
+                Log.d(TAG, "mediaPlayer!=null: " + (getMediaPlayer() != null));
                 onExit();
             }
         }catch (Exception e){
@@ -359,6 +388,59 @@ public class DanceScenario implements IScenario{
 
     }
 
+    /**
+     * 打断舞蹈
+     */
+    private void interruptDance(){
+        Log.d(TAG, "interruptDance 中断跳舞: ");
+        // 动作打断paramType = 4
+        motor.doAction(Action.buildBodyAction(1, 4, 1), new IMotorCallback() {
+            @Override
+            public void onStarted() {
+                Log.d(TAG, "中断跳舞 motor onStarted: ");
+
+            }
+
+            @Override
+            public void onStopped() {
+                Log.d(TAG, "中断跳舞 motor onStopped: ");
+
+            }
+
+            @Override
+            public void onPaused() {
+                Log.d(TAG, "中断跳舞 motor onPaused: ");
+
+            }
+
+            @Override
+            public void onResumed() {
+                Log.d(TAG, "中断跳舞 motor onResumed: ");
+
+            }
+
+            @Override
+            public void onInterrupted() {
+                Log.d(TAG, "中断跳舞 motor onInterrupted: ");
+
+            }
+
+            @Override
+            public void onCompleted() {
+                Log.d(TAG, "中断跳舞 motor onCompleted: ");
+
+            }
+
+            @Override
+            public void onError(String s) {
+                Log.d(TAG, "中断跳舞 motor onError: ");
+                Log.e(TAG, "onError  s: "+s);
+
+            }
+        });
+
+    }
+    
     @Override
     public String getScenarioAppKey() {
         return APPKEY;
@@ -568,81 +650,103 @@ public class DanceScenario implements IScenario{
             executeSong(musicName);
         } catch (IOException e) {
             e.printStackTrace();
+            tts.speak(manager.getString(R.string.noExistDance));
             Log.e(TAG, "executeSong e: "+e.getMessage() );
         }
 
 
     }
 
-    private void executeSong(String fileName) throws IOException {
+    private void executeSong(final String fileName) throws IOException {
         Log.d(TAG, "executeSong(String fileName): ");
 
-        if (TobotUtils.isEmpty(mediaPlayer)) {
-            mediaPlayer = manager.createNetMp3(fileName);
-            createState = true;
-        } else{
-            mediaPlayer.release();//释放音频资源
-            mediaPlayer = manager.createNetMp3(fileName);
-            createState = true;
-        }
-        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        Log.d(TAG, "mediaPlayer==null: "+(mediaPlayer==null));
-        //当播放完音频资源时，会触发onCompletion事件，可以在该事件中释放音频资源，
-        //以便其他应用程序可以使用该资源:
-        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+        MediaPlayer.OnPreparedListener onPreparedListener=new MediaPlayer.OnPreparedListener() {
             @Override
-            public void onCompletion(MediaPlayer mp) {
-                Log.d(TAG, "mediaPlayer.setOnCompletionListener onCompletion: ");
+            public void onPrepared(MediaPlayer mp) {
+                Log.d(TAG, "MediaPlayer.OnPreparedListener onPrepared: ");
+                //mohuaiyuan 增加语音播报 20171207
+                Log.d(TAG, "songName: "+songName);
+                Log.d(TAG, "fileName: "+fileName);
 
-                //mohuaiyuan  20170915 暂时注释
-//                mp.release();//释放音频资源
-//                Log.i("Javen", "资源已经被释放了");
-//                Log.d(TAG, "资源已经被释放了: ");
 
-                //mohuaiyuan 释放资源
-                onExit();
+                final int actionCode=getActionCode();
+                Log.d(TAG, "actionCode: "+actionCode);
+                if (songName==null || songName.trim().length()<1){
+                    songName=actionMap.get(actionCode);
+                    if (songName.contains(".")){
+                        songName=songName.substring(0,songName.indexOf("."));
+                    }
+                }
+                Log.d(TAG, "songName: "+songName);
+                String speech=manager.getString(R.string.beforePlayDance)+":"+songName;
+                tts.speak(speech, new ITTSCallback() {
+                    @Override
+                    public void onStart(String s) {
+                        Log.d(TAG, "tts onStart: ");
 
-               // manager.backMainScenario();
-				scenarioManager.quitCurrentScenario();
+                    }
+
+                    @Override
+                    public void onPaused() {
+                        Log.d(TAG, "tts onPaused: ");
+
+                    }
+
+                    @Override
+                    public void onResumed() {
+                        Log.d(TAG, "tts onResumed: ");
+
+                    }
+
+                    @Override
+                    public void onCompleted() {
+                        Log.d(TAG, "tts onCompleted: ");
+                        //机器人开始跳舞动作
+                        getMediaPlayer().start();
+                        sendBodyAction(actionCode);
+
+                    }
+
+                    @Override
+                    public void onError(String s) {
+                        Log.d(TAG, "tts onError: ");
+
+                    }
+                });
+
+
 
 
             }
-        });
-        mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+        };
+
+        MediaPlayer.OnCompletionListener onCompletionListener=new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                Log.d(TAG, " MediaPlayer.OnCompletionListener onCompletion: ");
+                mISceneV.getScenario("os.sys.dance");
+                onExit();
+//                scenarioManager.quitCurrentScenario();
+            }
+        };
+
+        MediaPlayer.OnErrorListener onErrorListener=new MediaPlayer.OnErrorListener() {
             @Override
             public boolean onError(MediaPlayer mp, int what, int extra) {
-                Log.d(TAG, "mediaPlayer.setOnErrorListener : ");
+                Log.d(TAG, "MediaPlayer.OnErrorListener onError: ");
                 Log.d(TAG, "what: "+what);
                 Log.d(TAG, "extra: "+extra);
                 return false;
             }
-        });
-        //在播放音频资源之前，必须调用Prepare方法完成些准备工作
-        mediaPlayer.prepareAsync();
-        mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(MediaPlayer mp) {
-                Log.d(TAG, "mediaPlayer.setOnPreparedListener onPrepared: ");
+        };
 
-                //机器人开始跳舞动作
-                int actionCode=getActionCode();
-                Log.d(TAG, "actionCode: "+actionCode);
-//                tts.speak("好的,我要开始跳了");
-//                try {
-//                    Thread.sleep(2000);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-                mp.start();
-                sendBodyAction(actionCode);
+        try {
+            manager.playMusic(fileName,onPreparedListener,onCompletionListener,onErrorListener);
+        } catch (Exception e) {
+            Log.d(TAG, "播放音乐 出现 Exception e : "+e.getMessage());
+            e.printStackTrace();
+        }
 
-            }
-        });
-//        if (createState) {
-//            mediaPlayer.prepare();
-//        }
-        //开始播放音频
-//        mediaPlayer.start();
     }
 
     /**
@@ -708,58 +812,45 @@ public class DanceScenario implements IScenario{
             @Override
             public void onStarted() {
                 super.onStarted();
-                Log.d(TAG, "onStarted: ");
-                try{
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-//                            try {
-//                                Thread.sleep(1700);
-//                            } catch (InterruptedException e) {
-//                                e.printStackTrace();
-//                            }
-                            //播放背景音乐
-                            mediaPlayer.start();
-                        }
-                    }).start();
-                }catch (Exception e){
-
-                }
+                Log.d(TAG, "sendBodyAction onStarted: ");
+                //播放背景音乐
+                getMediaPlayer().start();
             }
 
             @Override
             public void onStopped() {
                 super.onStopped();
-                Log.d(TAG, "onStopped: ");
+                Log.d(TAG, "sendBodyAction onStopped: ");
             }
 
             @Override
             public void onPaused() {
                 super.onPaused();
-                Log.d(TAG, "onPaused: ");
+                Log.d(TAG, "sendBodyAction onPaused: ");
             }
 
             @Override
             public void onResumed() {
                 super.onResumed();
-                Log.d(TAG, "onResumed: ");
+                Log.d(TAG, "sendBodyAction onResumed: ");
             }
 
             @Override
             public void onInterrupted() {
                 super.onInterrupted();
-                Log.d(TAG, "onInterrupted: ");
+                Log.d(TAG, "sendBodyAction onInterrupted: ");
             }
 
             @Override
             public void onCompleted() {
                 super.onCompleted();
-                Log.d(TAG, "onCompleted: ");
+                Log.d(TAG, "sendBodyAction onCompleted: ");
             }
 
             @Override
             public void onError(String s) {
                 super.onError(s);
+                Log.d(TAG, "sendBodyAction onError: ");
                 Log.d(TAG, "onError: "+s);
             }
         });
@@ -787,6 +878,10 @@ public class DanceScenario implements IScenario{
             return -1;
         }
         return actonCode;
+    }
+
+    private MediaPlayer getMediaPlayer(){
+        return manager.getMediaPlayer();
     }
 
 

@@ -30,20 +30,20 @@ public class CameraSurfaceView extends SurfaceView implements SurfaceHolder.Call
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         // TODO Auto-generated method stub
-        Log.i(TAG, "surfaceCreated...");
+        Log.i(TAG, "Perform to surfaceCreated");
     }
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width,
                                int height) {
         // TODO Auto-generated method stub
-        Log.i(TAG, "surfaceChanged...");
+        Log.i(TAG, "Perform to surfaceChanged");
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
         // TODO Auto-generated method stub
-        Log.i(TAG, "surfaceDestroyed...");
+        Log.i(TAG, "Perform to surfaceDestroyed");
         CameraInterface.getInstance().doStopCamera();
     }
     public SurfaceHolder getSurfaceHolder(){

@@ -28,9 +28,10 @@ public class CameraInterface {
     private float mPreviwRate = -1f;
     private static CameraInterface mCameraInterface;
     private BLocal mBLocal;
+    private String FilePath;
 
     public interface CamOpenOverCallback{
-        public void cameraHasOpened();
+        void cameraHasOpened();
     }
 
     private CameraInterface(){
@@ -47,10 +48,10 @@ public class CameraInterface {
     /**打开Camera
      * @param callback
      */
-    public void doOpenCamera(CamOpenOverCallback callback){
-        Log.i(TAG, "Camera open....");
+    public void doOpenCamera(CamOpenOverCallback callback) throws Exception{
+        Log.i(TAG, "Perform to Camera open");
         mCamera = Camera.open();
-        Log.i(TAG, "Camera open over....");
+        Log.i(TAG, "Perform to Camera open over");
         callback.cameraHasOpened();
         mBLocal = (BLocal) callback;
     }
@@ -60,13 +61,13 @@ public class CameraInterface {
      * @param previewRate
      */
     public void doStartPreview(SurfaceHolder holder, float previewRate){
-        Log.i(TAG, "doStartPreview===>:isPreviewing"+isPreviewing);
+        Log.i(TAG, "Perform to doStartPreview===>isPreviewing:" + isPreviewing);
         if(isPreviewing){
             mCamera.stopPreview();
             return;
         }
         if(mCamera != null){
-
+            Log.i(TAG, "Perform to doStartPreview===>:mCamera != null");
             mParams = mCamera.getParameters();
             mParams.setPictureFormat(PixelFormat.JPEG);//设置拍照后存储的图片格式
             CamParaUtil.getInstance().printSupportPictureSize(mParams);
@@ -79,7 +80,7 @@ public class CameraInterface {
                     mParams.getSupportedPreviewSizes(), previewRate, 800);
             mParams.setPreviewSize(previewSize.width, previewSize.height);
 
-            mCamera.setDisplayOrientation(90);
+            mCamera.setDisplayOrientation(90);//旋转90度
 
             CamParaUtil.getInstance().printSupportFocusMode(mParams);
             List<String> focusModes = mParams.getSupportedFocusModes();
@@ -91,9 +92,10 @@ public class CameraInterface {
             try {
                 mCamera.setPreviewDisplay(holder);
                 mCamera.startPreview();//开启预览
-            } catch (IOException e) {
+            } catch (Exception e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
+                Log.i(TAG,"开启预览异常");
             }
 
             isPreviewing = true;
@@ -111,6 +113,7 @@ public class CameraInterface {
      * 停止预览，释放Camera
      */
     public void doStopCamera(){
+        Log.i(TAG, "Perform to doStopCamera ");
         if(null != mCamera){
             mCamera.setPreviewCallback(null);
             mCamera.stopPreview();
@@ -125,7 +128,7 @@ public class CameraInterface {
      * 拍照
      */
     public void doTakePicture(){
-        Log.i(TAG, "doTakePicture===>isPreviewing:"+isPreviewing);
+        Log.i(TAG, "Perform to doTakePicture===>isPreviewing:"+isPreviewing);
         if(isPreviewing && (mCamera != null)){
             mCamera.takePicture(mShutterCallback, null, mJpegPictureCallback);
         }
@@ -137,38 +140,36 @@ public class CameraInterface {
     {
         public void onShutter() {
             // TODO Auto-generated method stub
-            Log.i(TAG, "myShutterCallback:onShutter...");
+            Log.i(TAG, "Perform to myShutterCallback:onShutter");
         }
     };
 
     PictureCallback mRawCallback = new PictureCallback()
             // 拍摄的未压缩原数据的回调,可以为null
     {
-
         public void onPictureTaken(byte[] data, Camera camera) {
             // TODO Auto-generated method stub
-            Log.i(TAG, "myRawCallback:onPictureTaken...");
+            Log.i(TAG, "Perform to myRawCallback:onPictureTaken");
         }
     };
 
-    String FilePath;
     PictureCallback mJpegPictureCallback = new PictureCallback()
             //对jpeg图像数据的回调,最重要的一个回调
     {
         public void onPictureTaken(byte[] data, Camera camera) {
             // TODO Auto-generated method stub
-            Log.i(TAG, "myJpegCallback:onPictureTaken...");
-            Bitmap b = null;
+            Log.i(TAG, "Perform to mJpegPictureCallback:onPictureTaken");
+            Bitmap bitmap = null;
             if (null != data) {
-                b = BitmapFactory.decodeByteArray(data, 0, data.length);//data是字节数据，将其解析成位图
+                bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);//data是字节数据，将其解析成位图
                 mCamera.stopPreview();
                 isPreviewing = false;
             }
             //保存图片到sdcard
-            if (null != b) {
+            if (null != bitmap) {
                 //设置FOCUS_MODE_CONTINUOUS_VIDEO)之后，myParam.set("rotation", 90)失效。
                 //图片竟然不能旋转了，故这里要旋转下
-                Bitmap rotaBitmap = ImageUtil.getRotateBitmap(b, 90.0f);
+                Bitmap rotaBitmap = ImageUtil.getRotateBitmap(bitmap, 90.0f);
                 FilePath = FileUtil.saveBitmap(rotaBitmap);
                 mBLocal.upload(FilePath);
             }

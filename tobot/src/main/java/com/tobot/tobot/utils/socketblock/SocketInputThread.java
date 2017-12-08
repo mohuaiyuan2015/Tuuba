@@ -94,7 +94,7 @@ public class SocketInputThread extends Thread {
                         try {
                             receivedString = Charset.forName("UTF-8").newDecoder().decode(buffer).toString();
                             if (TobotUtils.isNotEmpty(receivedString)) {
-                                CLog.e(tag, "nio读取到的数据............." + receivedString);
+                                CLog.e(tag, "nio读取到的数据:" + receivedString);
                                 //处理收到服务器过来的消息
                                 if (receivedString.equals("[12]")) {//处理心跳回复
 
@@ -106,7 +106,7 @@ public class SocketInputThread extends Thread {
                                     SocketThreadManager.sharedInstance().sendMsg(Transform.HexString2Bytes(Joint.setRegister()));
                                 } else if (receivedString.substring(2, 3).equals("3")) {//拍照 31 33 30 30 30 35 30 30 30 30 31 46 42 39 46
                                     SocketThreadManager.sharedInstance().sendMsg(Transform.HexString2Bytes(Joint.setResponse(Joint.PHOTO, receivedString)));
-                                    MainActivity.mBLocal.camera(Joint.getSpecialRunning(receivedString));
+                                    MainActivity.mBLocal.carryThrough(Joint.getSpecialRunning(receivedString));
                                 } else if (receivedString.substring(2, 3).equals("4")) {//点播
                                     SocketThreadManager.sharedInstance().sendMsg(Transform.HexString2Bytes(Joint.setDemandResponse(receivedString)));
                                     Message Msg = Message.obtain();
@@ -179,7 +179,7 @@ public class SocketInputThread extends Thread {
                         SocketThreadManager.sharedInstance().sendMsg(Transform.HexString2Bytes(Joint.setRegister()));
                     } else if (message.substring(2,3).equals("3")) {//拍照 31 33 30 30 30 35 30 30 30 30 31 46 42 39 46
                         SocketThreadManager.sharedInstance().sendMsg(Transform.HexString2Bytes(Joint.setResponse(Joint.PHOTO,message)));
-                        MainActivity.mBLocal.camera(Joint.getSpecialRunning(message));
+                        MainActivity.mBLocal.carryThrough(Joint.getSpecialRunning(message));
                     } else if (message.substring(2,3).equals("4")) {//点播
                         SocketThreadManager.sharedInstance().sendMsg(Transform.HexString2Bytes(Joint.setDemandResponse(message)));
                         Message Msg = Message.obtain();
