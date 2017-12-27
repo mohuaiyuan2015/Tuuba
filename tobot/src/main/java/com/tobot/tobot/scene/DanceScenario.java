@@ -256,6 +256,7 @@ public class DanceScenario implements IScenario{
 //                    mediaPlayer.stop();
                         mISceneV.getScenario("os.sys.dance_stop");
                         interruptDance();
+                        onExit();
                     }
                     if (interrupt.contains("继续") && !getMediaPlayer().isPlaying()) {
                         Log.d(TAG, "继续: ");
