@@ -544,6 +544,10 @@ public class MainActivity extends BaseActivity implements ISceneV {
                             if (l < 4000) {//连续点击
                                 Log("触摸--连续点击");
                                 onBle();
+
+                                //mohuaiyuan 20171228 新的代码 新增的代码
+                                exitTime = 0;
+
                             } else {
                                 Log("触摸--单击");
                                 exitTime = System.currentTimeMillis();
